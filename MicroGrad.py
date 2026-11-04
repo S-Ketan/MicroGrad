@@ -32,9 +32,21 @@ class Value:
     def __rmul__(self, other):
         return self * other
 
+    def backward(self):
+        # Bring everything in topological order
+        topo = []
+        visited = set()
 
-a = Value(5)
-b = Value(3)
-c = a + b
-print(c)
-print(c._prev)
+        def build_topo(v):
+            if v not in visited:
+                visited.add(v)
+                for child in v._prev:
+                    build_topo(child)
+                topo.append(v)
+
+        build_topo(self)
+
+        # Applying chain rule one variable at a time
+        self.grad = 1
+        for v in reversed(topo):
+            v._backward()
